@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * @fileoverview Apple Glassmorphic Astronomical Data Card Component.
- * Features frosted liquid glass materials, specular highlights, and compact ephemeris metrics.
+ * @fileoverview Ultra-Clean Minimalist Astronomical Data Strip.
+ * Sleek, borderless metric columns with subtle frosted glass background
+ * eliminating cluttered nested boxes.
  *
  * @author Dual Dial Team
  */
@@ -30,63 +31,63 @@ export const AstroCard: React.FC<AstroCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl p-3 sm:p-3.5 md:p-4 transition-all duration-500 shrink-0 ${
+      className={`rounded-2xl p-3 sm:p-3.5 transition-all duration-500 backdrop-blur-2xl shrink-0 ${
         isNight
-          ? "apple-glass-dark text-white"
-          : "apple-glass-light text-slate-900"
+          ? "bg-black/25 border border-white/[0.08] text-white"
+          : "bg-white/35 border border-white/50 text-slate-900 shadow-sm"
       } ${className}`}
     >
-      {/* Card Header: Phase badge */}
-      <div className="flex items-center justify-between pb-1.5 sm:pb-2 mb-1.5 sm:mb-2 border-b border-current/15">
+      {/* Card Header */}
+      <div className="flex items-center justify-between pb-2 mb-2 border-b border-current/[0.08]">
         <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 shrink-0" />
-          <h3 className="text-[9px] sm:text-[11px] font-bold uppercase tracking-widest opacity-90 truncate">
-            Astronomy
+          <Sparkles className={`w-3.5 h-3.5 ${isNight ? "text-amber-400" : "text-amber-600"} shrink-0`} />
+          <h3 className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider opacity-75">
+            Astronomical Cycles
           </h3>
         </div>
-        <div className="flex items-center gap-1.5 text-[9px] sm:text-[11px] font-semibold opacity-90 shrink-0">
-          <MoonPhaseIcon phase={astro.moonPhaseValue} size={14} />
+        <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium opacity-85 shrink-0">
+          <MoonPhaseIcon phase={astro.moonPhaseValue} size={13} />
           <span suppressHydrationWarning>
-            {astro.moonPhaseName} ({astro.moonIlluminationPct}%)
+            {astro.moonPhaseName} <span className="opacity-60">({astro.moonIlluminationPct}%)</span>
           </span>
         </div>
       </div>
 
-      {/* Grid of solar & lunar times */}
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
+      {/* 4 Clean Borderless Metric Columns */}
+      <div className="grid grid-cols-4 gap-2 text-center sm:text-left">
         {/* Sunrise */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
-          <Sunrise className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        <div className="flex items-center gap-2 p-1">
+          <Sunrise className={`w-3.5 h-3.5 ${isNight ? "text-amber-400" : "text-amber-600"} shrink-0 opacity-90`} />
           <div className="min-w-0">
-            <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">Rise</div>
-            <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.sunrise}</div>
+            <div className="text-[9px] uppercase font-medium tracking-wider opacity-60">Sunrise</div>
+            <div className="font-mono font-semibold text-xs sm:text-sm truncate" suppressHydrationWarning>{astro.sunrise}</div>
           </div>
         </div>
 
         {/* Sunset */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
-          <Sunset className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+        <div className="flex items-center gap-2 p-1">
+          <Sunset className={`w-3.5 h-3.5 ${isNight ? "text-orange-400" : "text-orange-600"} shrink-0 opacity-90`} />
           <div className="min-w-0">
-            <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">Set</div>
-            <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.sunset}</div>
+            <div className="text-[9px] uppercase font-medium tracking-wider opacity-60">Sunset</div>
+            <div className="font-mono font-semibold text-xs sm:text-sm truncate" suppressHydrationWarning>{astro.sunset}</div>
           </div>
         </div>
 
         {/* Moonrise */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
-          <Moon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+        <div className="flex items-center gap-2 p-1">
+          <Moon className={`w-3.5 h-3.5 ${isNight ? "text-indigo-300" : "text-indigo-600"} shrink-0 opacity-90`} />
           <div className="min-w-0">
-            <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">MRise</div>
-            <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.moonrise || "—"}</div>
+            <div className="text-[9px] uppercase font-medium tracking-wider opacity-60">Moonrise</div>
+            <div className="font-mono font-semibold text-xs sm:text-sm truncate" suppressHydrationWarning>{astro.moonrise || "—"}</div>
           </div>
         </div>
 
         {/* Moonset */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
-          <Moon className="w-3.5 h-3.5 text-blue-400 rotate-180 shrink-0" />
+        <div className="flex items-center gap-2 p-1">
+          <Moon className={`w-3.5 h-3.5 ${isNight ? "text-sky-300" : "text-sky-600"} rotate-180 shrink-0 opacity-90`} />
           <div className="min-w-0">
-            <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">MSet</div>
-            <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.moonset || "—"}</div>
+            <div className="text-[9px] uppercase font-medium tracking-wider opacity-60">Moonset</div>
+            <div className="font-mono font-semibold text-xs sm:text-sm truncate" suppressHydrationWarning>{astro.moonset || "—"}</div>
           </div>
         </div>
       </div>

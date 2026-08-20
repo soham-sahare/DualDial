@@ -156,10 +156,10 @@ export default function DualDialPage() {
           paneLabel="Primary"
         />
 
-        {/* Central Split Divider Glow Line */}
-        <div className="hidden md:block w-[1px] bg-white/20 relative z-30 shadow-[0_0_12px_rgba(255,255,255,0.3)]">
-          <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full apple-glass-pill flex items-center justify-center text-[9px] font-mono font-bold text-white/80">
-            VS
+        {/* Central Split Hairline Divider */}
+        <div className="hidden md:block w-[1px] bg-white/10 relative z-30">
+          <div className="absolute top-1/2 -translate-y-1/2 -left-2.5 w-5 h-5 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-[8px] font-mono text-white/60">
+            vs
           </div>
         </div>
 
