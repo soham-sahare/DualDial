@@ -3,6 +3,7 @@
 /**
  * @fileoverview Ultra-Clean Minimalist Single-Screen DialPane Component.
  * Clean, subtle translucent surfaces with minimal hairline borders and crisp typography.
+ * Fixed z-index and spacing ensuring no controls or cards are hidden behind the timeline.
  *
  * @author Dual Dial Team
  */
@@ -56,7 +57,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
   return (
     <>
       <motion.section
-        className={`relative flex-1 min-h-0 w-full h-full flex flex-col justify-between pt-12 pb-14 sm:pt-16 sm:pb-16 px-4 sm:px-6 md:px-8 overflow-hidden transition-colors duration-1000 select-none ${
+        className={`relative flex-1 min-h-0 w-full h-full flex flex-col justify-between pt-12 pb-10 sm:pt-16 sm:pb-24 md:pb-24 px-4 sm:px-6 md:px-8 overflow-hidden transition-colors duration-1000 select-none ${
           theme.isDarkText ? "text-slate-900" : "text-white"
         }`}
         style={{ background: theme.gradientCss }}
@@ -68,7 +69,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
         {theme.showStars && <StarrySky count={24} opacity={0.5} />}
 
         {/* TOP SECTION: Location Header & Scaled Arc */}
-        <div className="relative z-20 flex flex-col gap-1.5 sm:gap-2 shrink-0">
+        <div className="relative z-20 flex flex-col gap-1 sm:gap-2 shrink-0">
           {/* Top Bar: Minimal Badge & Location Selector Button */}
           <div className="flex items-center justify-between gap-2">
             <span
@@ -122,13 +123,13 @@ export const DialPane: React.FC<DialPaneProps> = ({
           </div>
         </div>
 
-        {/* MIDDLE SECTION: Digital Clock & Date */}
+        {/* MIDDLE SECTION: Digital Clock, Date, DST, & Mobile Celestial Trigger */}
         <div className="relative z-20 my-auto py-1 flex flex-col items-center justify-center text-center shrink-0">
           {/* Main Digital Clock */}
           <div className="flex items-baseline justify-center gap-1 sm:gap-2">
             <span
               suppressHydrationWarning
-              className={`font-mono text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none ${
+              className={`font-mono text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none ${
                 theme.isDarkText ? "text-slate-950" : "text-white"
               }`}
             >
@@ -139,7 +140,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
             {showSeconds && (
               <span
                 suppressHydrationWarning
-                className={`font-mono text-xl sm:text-2xl md:text-3xl font-bold ${
+                className={`font-mono text-lg sm:text-2xl md:text-3xl font-bold ${
                   theme.isDarkText ? "text-slate-700" : "text-white/70"
                 }`}
               >
@@ -174,7 +175,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
           {/* Clean Minimalist DST & Relative Offset Card (When Secondary) */}
           {isSecondary ? (
             <motion.div
-              className={`mt-2 sm:mt-2.5 w-full max-w-sm p-3 rounded-2xl backdrop-blur-2xl text-left transition-all ${
+              className={`mt-1.5 sm:mt-2.5 w-full max-w-sm p-2.5 sm:p-3 rounded-2xl backdrop-blur-2xl text-left transition-all ${
                 !theme.isDarkText
                   ? "bg-black/25 border border-white/[0.08] text-white"
                   : "bg-white/40 border border-white/50 text-slate-900 shadow-sm"
@@ -211,7 +212,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
               </div>
 
               {/* Natural Language DST Status Text */}
-              <div className="mt-2 pt-2 border-t border-current/[0.08] space-y-0.5 text-[9px] sm:text-[10px]">
+              <div className="mt-1.5 pt-1.5 border-t border-current/[0.08] space-y-0.5 text-[9px] sm:text-[10px]">
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck
                     className={`w-3 h-3 shrink-0 ${
@@ -242,15 +243,12 @@ export const DialPane: React.FC<DialPaneProps> = ({
               Base Reference · Indian Standard Time (UTC+5:30)
             </div>
           )}
-        </div>
 
-        {/* BOTTOM SECTION: Mobile 'Celestial Details' Button vs Desktop Full Card */}
-        <div className="relative z-20 mt-auto pt-1 shrink-0">
-          {/* Mobile: Minimal 'Celestial Details' Button */}
-          <div className="md:hidden flex items-center justify-center">
+          {/* Mobile-Only Celestial Details Trigger Button (Placed directly in middle section so it is never covered) */}
+          <div className="md:hidden mt-2 flex items-center justify-center">
             <button
               onClick={() => setIsAstroModalOpen(true)}
-              className={`group flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-medium tracking-wider backdrop-blur-xl transition-all active:scale-95 ${
+              className={`group flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-medium tracking-wider backdrop-blur-xl transition-all active:scale-95 shadow-sm ${
                 !theme.isDarkText
                   ? "bg-white/10 hover:bg-white/15 border border-white/15 text-white"
                   : "bg-white/50 hover:bg-white/70 border border-white/60 text-slate-900"
@@ -262,14 +260,14 @@ export const DialPane: React.FC<DialPaneProps> = ({
               <ChevronRight className="w-3 h-3 opacity-60 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
+        </div>
 
-          {/* Desktop (md+): Sleek inline Astronomical Strip */}
-          <div className="hidden md:block">
-            <AstroCard
-              astro={dialData.astro}
-              skyCondition={dialData.astro.skyCondition}
-            />
-          </div>
+        {/* BOTTOM SECTION: Desktop Astronomical Strip (Hidden on Mobile) */}
+        <div className="hidden md:block relative z-20 mt-auto pt-1 shrink-0">
+          <AstroCard
+            astro={dialData.astro}
+            skyCondition={dialData.astro.skyCondition}
+          />
         </div>
       </motion.section>
 
