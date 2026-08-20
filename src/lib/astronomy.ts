@@ -1,7 +1,7 @@
 /**
  * @fileoverview Astronomical calculations wrapper using SunCalc and Luxon.
  * Calculates solar and lunar positions, sunrise/sunset, moonrise/moonset,
- * lunar phase names, illumination metrics, and celestial arc positions.
+ * lunar phase names, illumination metrics, and celestial arc positions with fast in-memory caching.
  *
  * @author Dual Dial Team
  */
@@ -17,7 +17,6 @@ import { AstronomicalData, SkyCondition } from "./types";
  * @returns Standard astronomical phase name.
  */
 export function getMoonPhaseName(phase: number): string {
-  // Phase value 0.0 -> New Moon, 0.25 -> First Quarter, 0.5 -> Full Moon, 0.75 -> Last Quarter
   if (phase < 0.03 || phase > 0.97) return "New Moon";
   if (phase < 0.22) return "Waxing Crescent";
   if (phase < 0.28) return "First Quarter";
@@ -42,7 +41,6 @@ export function formatTimeInZone(
   is24Hour: boolean = false
 ): string {
   if (!date || isNaN(date.getTime())) return "--:--";
-
   const dt = DateTime.fromJSDate(date, { zone: zoneId });
   return is24Hour ? dt.toFormat("HH:mm") : dt.toFormat("hh:mm a");
 }
@@ -71,42 +69,29 @@ export function determineSkyCondition(
   const dawn = sunTimes.dawn ? sunTimes.dawn.getTime() : sunrise - 30 * 60 * 1000;
   const dusk = sunTimes.dusk ? sunTimes.dusk.getTime() : sunset + 30 * 60 * 1000;
 
-  // Dawn window: from civil dawn until 30 minutes after sunrise
   const dawnEnd = sunrise + 35 * 60 * 1000;
   if (time >= dawn && time < dawnEnd && altitudeDeg < 8) {
     return "dawn";
   }
 
-  // Dusk window: from 45 minutes before sunset until civil dusk
   const duskStart = sunset - 45 * 60 * 1000;
   if (time >= duskStart && time <= dusk && altitudeDeg < 8) {
     return "dusk";
   }
 
-  // Daylight: sun altitude >= 0 and between sunrise and sunset
   if (sunPos.altitude > 0) {
     return "day";
   }
 
-  // Night: sun below horizon and outside dawn/dusk
   return "night";
 }
 
-/**
- * Calculates progress along the celestial parabolic arc (0.0 to 1.0).
- *
- * @param currentTime - Current timestamp in milliseconds.
- * @param riseTime - Rise timestamp in milliseconds.
- * @param setTime - Set timestamp in milliseconds.
- * @returns Progress value normalized from 0.0 (rise) to 1.0 (set).
- */
 export function calculateArcProgress(
   currentTime: number,
   riseTime: number,
   setTime: number
 ): number {
   if (riseTime >= setTime || currentTime < riseTime || currentTime > setTime) {
-    // Body is either below horizon or timing is inverted
     return 0.5;
   }
   const total = setTime - riseTime;
@@ -114,15 +99,34 @@ export function calculateArcProgress(
   return Math.min(Math.max(elapsed / total, 0), 1);
 }
 
+// In-memory cache for static daily astronomical calculations
+interface DailyAstroCache {
+  sunriseStr: string;
+  sunsetStr: string;
+  dawnStr: string;
+  duskStr: string;
+  solarNoonStr: string;
+  moonriseStr: string | null;
+  moonsetStr: string | null;
+  moonPhaseName: string;
+  moonPhaseValue: number;
+  moonIlluminationPct: number;
+  sunTimes: SunCalc.GetTimesResult;
+  moonTimes: SunCalc.GetMoonTimes;
+}
+
+const astroDailyCache = new Map<string, DailyAstroCache>();
+
 /**
  * Computes all astronomical metrics for a given timezone and coordinate set.
+ * High performance with in-memory memoization.
  *
  * @param zoneId - IANA timezone identifier.
  * @param lat - Latitude in decimal degrees.
  * @param lon - Longitude in decimal degrees.
- * @param referenceDate - Reference timestamp (defaults to current date).
- * @param is24Hour - Whether to format times in 24h format.
- * @returns Comprehensive AstronomicalData object.
+ * @param referenceDate - Reference timestamp.
+ * @param is24Hour - 24-hour format boolean.
+ * @returns AstronomicalData object.
  */
 export function computeAstronomicalData(
   zoneId: string,
@@ -131,59 +135,59 @@ export function computeAstronomicalData(
   referenceDate: Date = new Date(),
   is24Hour: boolean = false
 ): AstronomicalData {
-  // 1. Solar calculations
-  const sunTimes = SunCalc.getTimes(referenceDate, lat, lon);
+  // Key for daily static values
+  const dateKey = `${zoneId}:${lat}:${lon}:${referenceDate.getFullYear()}-${referenceDate.getMonth()}-${referenceDate.getDate()}:${is24Hour ? 1 : 0}`;
+
+  let cached = astroDailyCache.get(dateKey);
+  if (!cached) {
+    const sunTimes = SunCalc.getTimes(referenceDate, lat, lon);
+    const moonIllum = SunCalc.getMoonIllumination(referenceDate);
+    const moonTimes = SunCalc.getMoonTimes(referenceDate, lat, lon);
+
+    cached = {
+      sunriseStr: formatTimeInZone(sunTimes.sunrise, zoneId, is24Hour),
+      sunsetStr: formatTimeInZone(sunTimes.sunset, zoneId, is24Hour),
+      dawnStr: formatTimeInZone(sunTimes.dawn, zoneId, is24Hour),
+      duskStr: formatTimeInZone(sunTimes.dusk, zoneId, is24Hour),
+      solarNoonStr: formatTimeInZone(sunTimes.solarNoon, zoneId, is24Hour),
+      moonriseStr: moonTimes.rise ? formatTimeInZone(moonTimes.rise, zoneId, is24Hour) : null,
+      moonsetStr: moonTimes.set ? formatTimeInZone(moonTimes.set, zoneId, is24Hour) : null,
+      moonPhaseName: getMoonPhaseName(moonIllum.phase),
+      moonPhaseValue: moonIllum.phase,
+      moonIlluminationPct: Math.round(moonIllum.fraction * 100),
+      sunTimes,
+      moonTimes,
+    };
+    astroDailyCache.set(dateKey, cached);
+  }
+
+  // Dynamic values (instant calculation)
   const sunPosition = SunCalc.getPosition(referenceDate, lat, lon);
-  const isSunUp = sunPosition.altitude > 0;
-
-  // 2. Lunar calculations
-  const moonIllum = SunCalc.getMoonIllumination(referenceDate);
   const moonPosition = SunCalc.getMoonPosition(referenceDate, lat, lon);
-  const moonTimes = SunCalc.getMoonTimes(referenceDate, lat, lon);
+  const isSunUp = sunPosition.altitude > 0;
   const isMoonUp = moonPosition.altitude > 0;
+  const skyCondition = determineSkyCondition(referenceDate, lat, lon, cached.sunTimes);
 
-  // 3. Formatted display strings
-  const sunriseStr = formatTimeInZone(sunTimes.sunrise, zoneId, is24Hour);
-  const sunsetStr = formatTimeInZone(sunTimes.sunset, zoneId, is24Hour);
-  const dawnStr = formatTimeInZone(sunTimes.dawn, zoneId, is24Hour);
-  const duskStr = formatTimeInZone(sunTimes.dusk, zoneId, is24Hour);
-  const solarNoonStr = formatTimeInZone(sunTimes.solarNoon, zoneId, is24Hour);
-
-  const moonriseStr = moonTimes.rise
-    ? formatTimeInZone(moonTimes.rise, zoneId, is24Hour)
-    : null;
-  const moonsetStr = moonTimes.set
-    ? formatTimeInZone(moonTimes.set, zoneId, is24Hour)
-    : null;
-
-  const moonPhaseName = getMoonPhaseName(moonIllum.phase);
-  const moonIlluminationPct = Math.round(moonIllum.fraction * 100);
-
-  // 4. Sky condition
-  const skyCondition = determineSkyCondition(referenceDate, lat, lon, sunTimes);
-
-  // 5. Arc Progress calculations
+  // Parabolic progress
   const currentMs = referenceDate.getTime();
   let sunProgress = 0.5;
 
-  if (sunTimes.sunrise && sunTimes.sunset) {
-    const riseMs = sunTimes.sunrise.getTime();
-    const setMs = sunTimes.sunset.getTime();
+  if (cached.sunTimes.sunrise && cached.sunTimes.sunset) {
+    const riseMs = cached.sunTimes.sunrise.getTime();
+    const setMs = cached.sunTimes.sunset.getTime();
 
     if (isSunUp && setMs > riseMs) {
       sunProgress = calculateArcProgress(currentMs, riseMs, setMs);
     } else {
-      // Night progression across lower half or approximate
       const dt = DateTime.fromJSDate(referenceDate, { zone: zoneId });
-      const dayFraction = (dt.hour * 3600 + dt.minute * 60 + dt.second) / 86400;
-      sunProgress = dayFraction;
+      sunProgress = (dt.hour * 3600 + dt.minute * 60 + dt.second) / 86400;
     }
   }
 
   let moonProgress = 0.5;
-  if (moonTimes.rise && moonTimes.set) {
-    const mRiseMs = moonTimes.rise.getTime();
-    const mSetMs = moonTimes.set.getTime();
+  if (cached.moonTimes.rise && cached.moonTimes.set) {
+    const mRiseMs = cached.moonTimes.rise.getTime();
+    const mSetMs = cached.moonTimes.set.getTime();
     if (mSetMs > mRiseMs && currentMs >= mRiseMs && currentMs <= mSetMs) {
       moonProgress = calculateArcProgress(currentMs, mRiseMs, mSetMs);
     } else {
@@ -193,16 +197,16 @@ export function computeAstronomicalData(
   }
 
   return {
-    sunrise: sunriseStr,
-    sunset: sunsetStr,
-    dawn: dawnStr,
-    dusk: duskStr,
-    solarNoon: solarNoonStr,
-    moonrise: moonriseStr,
-    moonset: moonsetStr,
-    moonPhaseName,
-    moonPhaseValue: moonIllum.phase,
-    moonIlluminationPct,
+    sunrise: cached.sunriseStr,
+    sunset: cached.sunsetStr,
+    dawn: cached.dawnStr,
+    dusk: cached.duskStr,
+    solarNoon: cached.solarNoonStr,
+    moonrise: cached.moonriseStr,
+    moonset: cached.moonsetStr,
+    moonPhaseName: cached.moonPhaseName,
+    moonPhaseValue: cached.moonPhaseValue,
+    moonIlluminationPct: cached.moonIlluminationPct,
     sunAltitude: sunPosition.altitude,
     sunAzimuth: sunPosition.azimuth,
     moonAltitude: moonPosition.altitude,

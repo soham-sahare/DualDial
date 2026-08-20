@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     "Next.js Time App",
   ],
   authors: [{ name: "Dual Dial Team" }],
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export const viewport = {

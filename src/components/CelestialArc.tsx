@@ -96,7 +96,7 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
 
       {/* Sun Celestial Body */}
       <motion.div
-        className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+        className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 will-change-transform"
         initial={false}
         animate={{
           left: `${sunPos.x}%`,
@@ -105,14 +105,13 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
           scale: astro.isSunUp ? 1 : 0.75,
         }}
         transition={{
-          type: "spring",
-          stiffness: 70,
-          damping: 20,
+          duration: 0.5,
+          ease: "easeInOut",
         }}
         suppressHydrationWarning
       >
         <div className="relative flex items-center justify-center">
-          <div className="absolute w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-amber-400/30 blur-md animate-pulse-slow pointer-events-none" />
+          <div className="absolute w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-amber-400/30 blur-md pointer-events-none" />
           <div className="absolute w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-yellow-300/50 blur-sm pointer-events-none" />
 
           <div className="relative w-5 sm:w-7 h-5 sm:h-7 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-yellow-100 shadow-[0_0_16px_rgba(245,158,11,0.8)] flex items-center justify-center border border-yellow-200/80">
@@ -123,7 +122,7 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
 
       {/* Moon Celestial Body */}
       <motion.div
-        className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+        className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 will-change-transform"
         initial={false}
         animate={{
           left: `${moonPos.x}%`,
@@ -132,9 +131,8 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
           scale: !astro.isSunUp || skyCondition === "night" ? 1 : 0.8,
         }}
         transition={{
-          type: "spring",
-          stiffness: 70,
-          damping: 20,
+          duration: 0.5,
+          ease: "easeInOut",
         }}
         suppressHydrationWarning
       >

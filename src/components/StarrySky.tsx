@@ -77,7 +77,7 @@ export const StarrySky: React.FC<StarrySkyProps> = ({
       {stars.map((star) => (
         <div
           key={star.id}
-          className="absolute rounded-full bg-white animate-twinkle shadow-[0_0_4px_rgba(255,255,255,0.8)]"
+          className="absolute rounded-full bg-white animate-twinkle shadow-[0_0_4px_rgba(255,255,255,0.8)] will-change-[transform,opacity] transform-gpu"
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
