@@ -32,9 +32,11 @@ export default function DualDialPage() {
   // 3. Live Ticking Clock State
   const [liveDate, setLiveDate] = useState<Date>(() => new Date());
   const [scrubbedMinutes, setScrubbedMinutes] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // 4. Update live clock every 1 second when in live mode
+  // 4. Update live clock every 1 second when in live mode and handle client mount
   useEffect(() => {
+    setMounted(true);
     const timer = setInterval(() => {
       setLiveDate(new Date());
     }, 1000);
@@ -47,7 +49,6 @@ export default function DualDialPage() {
     if (scrubbedMinutes === null) {
       return liveDate;
     }
-    // Simulate target time based on today's date with scrubbed hours and minutes
     const simulated = new Date(liveDate);
     const targetHours = Math.floor(scrubbedMinutes / 60);
     const targetMinutes = scrubbedMinutes % 60;
@@ -63,6 +64,17 @@ export default function DualDialPage() {
       return nextPrimary;
     });
   }, [secondaryTz]);
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen w-full bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+          <span className="text-sm font-mono text-slate-400">Loading Dual Dial...</span>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen w-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden font-sans">
