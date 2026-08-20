@@ -1,7 +1,9 @@
 /**
  * @fileoverview Type definitions and data interfaces for Dual Dial application.
  * Defines structures for timezone metadata, astronomical calculations,
- * Daylight Saving Time (DST) analysis, and UI visual states.
+ * Daylight Saving Time (DST) analysis, solar & lunar eclipses, and UI visual states.
+ *
+ * @author Dual Dial Team
  */
 
 /**
@@ -36,6 +38,26 @@ export interface TimezoneInfo {
 export type SkyCondition = "dawn" | "day" | "dusk" | "night";
 
 /**
+ * Astronomical Solar or Lunar Eclipse Event structure.
+ */
+export interface EclipseEvent {
+  /** Type of eclipse (Solar Total, Lunar Total, Solar Annular, Lunar Partial, etc.). */
+  type: string;
+  /** Category ("Solar" | "Lunar"). */
+  category: "Solar" | "Lunar";
+  /** Formatted calendar date of eclipse peak. */
+  dateFormatted: string;
+  /** Exact ISO timestamp or Date object. */
+  date: string;
+  /** Geographic regions where the eclipse is observable. */
+  visibility: string;
+  /** Description and astronomical significance. */
+  description: string;
+  /** Days remaining until the event. */
+  daysUntil: number;
+}
+
+/**
  * Calculated astronomical data derived from SunCalc for a given location and timestamp.
  */
 export interface AstronomicalData {
@@ -49,6 +71,12 @@ export interface AstronomicalData {
   dusk: string;
   /** Formatted solar noon string. */
   solarNoon: string;
+  /** Formatted golden hour time window. */
+  goldenHour: string;
+  /** Formatted total daylight duration (e.g., "13h 37m"). */
+  dayLengthFormatted: string;
+  /** Formatted total night duration (e.g., "10h 23m"). */
+  nightLengthFormatted: string;
   /** Formatted moonrise time string if available on that date. */
   moonrise: string | null;
   /** Formatted moonset time string if available on that date. */
@@ -59,22 +87,30 @@ export interface AstronomicalData {
   moonPhaseValue: number;
   /** Moon illumination percentage (0% to 100%). */
   moonIlluminationPct: number;
-  /** Sun altitude in radians. */
-  sunAltitude: number;
-  /** Sun azimuth in radians. */
-  sunAzimuth: number;
-  /** Moon altitude in radians. */
-  moonAltitude: number;
+  /** Age of current moon in days (0.0 to 29.53 days). */
+  moonAgeDays: number;
+  /** Approximate date of next Full Moon. */
+  nextFullMoon: string;
+  /** Approximate date of next New Moon. */
+  nextNewMoon: string;
+  /** Sun altitude in degrees. */
+  sunAltitudeDeg: number;
+  /** Sun azimuth in degrees. */
+  sunAzimuthDeg: number;
+  /** Moon altitude in degrees. */
+  moonAltitudeDeg: number;
   /** Whether the sun is currently above the horizon. */
   isSunUp: boolean;
   /** Whether the moon is currently above the horizon. */
   isMoonUp: boolean;
   /** Current sky condition category for gradient theming. */
   skyCondition: SkyCondition;
-  /** Parabolic arc progress for sun (0.0 = sunrise, 0.5 = noon, 1.0 = sunset, or night arc). */
+  /** Parabolic arc progress for sun (0.0 = sunrise, 0.5 = noon, 1.0 = sunset). */
   sunProgress: number;
   /** Parabolic arc progress for moon (0.0 to 1.0). */
   moonProgress: number;
+  /** Almanac list of upcoming Solar and Lunar eclipses. */
+  upcomingEclipses: EclipseEvent[];
 }
 
 /**
@@ -83,25 +119,13 @@ export interface AstronomicalData {
 export interface DstAnalysis {
   /** Whether DST is currently actively observed in this timezone. */
   isDst: boolean;
-  /**
-   * Explicit natural language text for current DST status.
-   * e.g., "Currently observing Daylight Saving Time (+1 Hour)" or "Standard Time (No DST)".
-   */
+  /** Explicit natural language text for current DST status. */
   dstStatusText: string;
-  /**
-   * Relative offset difference in decimal hours compared to primary timezone (IST).
-   * Negative means behind, positive means ahead.
-   */
+  /** Relative offset difference in decimal hours compared to primary timezone (IST). */
   relativeOffsetHours: number;
-  /**
-   * Explicit natural language text for relative offset vs IST.
-   * e.g., "9.5 hours behind IST", "4.5 hours ahead of IST", or "Same time as IST".
-   */
+  /** Explicit natural language text for relative offset vs IST. */
   relativeOffsetText: string;
-  /**
-   * Explicit natural language text for upcoming DST transition.
-   * e.g., "Upcoming: Clocks fall back 1 hour on Nov 1, 2026" or "No upcoming DST transitions".
-   */
+  /** Explicit natural language text for upcoming DST transition. */
   upcomingShiftText: string;
   /** Current timezone abbreviation (e.g., "EDT", "EST", "IST", "GMT"). */
   zoneAbbr: string;
@@ -113,20 +137,12 @@ export interface DstAnalysis {
  * Full state snapshot for a single timezone dial pane.
  */
 export interface DialPaneData {
-  /** Timezone metadata. */
   timezone: TimezoneInfo;
-  /** Formatted time string (e.g. "10:42:15" or "10:42 AM"). */
   timeFormatted: string;
-  /** Formatted hours and minutes. */
   hoursMinutes: string;
-  /** Formatted seconds. */
   seconds: string;
-  /** AM/PM period if 12h mode. */
   period: string;
-  /** Formatted date string (e.g., "Thursday, Aug 20, 2026"). */
   dateFormatted: string;
-  /** Astronomical calculations for celestial visualizer. */
   astro: AstronomicalData;
-  /** DST and offset analysis. */
   dst: DstAnalysis;
 }

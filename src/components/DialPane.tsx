@@ -267,6 +267,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
           <AstroCard
             astro={dialData.astro}
             skyCondition={dialData.astro.skyCondition}
+            onClick={() => setIsAstroModalOpen(true)}
           />
         </div>
       </motion.section>

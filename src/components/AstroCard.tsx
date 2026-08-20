@@ -3,13 +3,13 @@
 /**
  * @fileoverview Ultra-Clean Minimalist Astronomical Data Strip.
  * Sleek, borderless metric columns with subtle frosted glass background
- * eliminating cluttered nested boxes.
+ * and interactive trigger to open full Solar, Lunar & Eclipse details.
  *
  * @author Dual Dial Team
  */
 
 import React from "react";
-import { Sunrise, Sunset, Moon, Sparkles } from "lucide-react";
+import { Sunrise, Sunset, Moon, Sparkles, ChevronRight } from "lucide-react";
 import { AstronomicalData, SkyCondition } from "@/lib/types";
 import { MoonPhaseIcon } from "./MoonPhaseIcon";
 
@@ -18,6 +18,8 @@ interface AstroCardProps {
   astro: AstronomicalData;
   /** Sky condition for styling. */
   skyCondition: SkyCondition;
+  /** Optional click handler to open comprehensive details modal. */
+  onClick?: () => void;
   /** Custom CSS classes. */
   className?: string;
 }
@@ -25,16 +27,20 @@ interface AstroCardProps {
 export const AstroCard: React.FC<AstroCardProps> = ({
   astro,
   skyCondition,
+  onClick,
   className = "",
 }) => {
   const isNight = skyCondition === "night" || skyCondition === "dusk";
 
   return (
     <div
-      className={`rounded-2xl p-3 sm:p-3.5 transition-all duration-500 backdrop-blur-2xl shrink-0 ${
+      onClick={onClick}
+      className={`rounded-2xl p-3 sm:p-3.5 transition-all duration-300 backdrop-blur-2xl shrink-0 ${
+        onClick ? "cursor-pointer group hover:scale-[1.01] active:scale-[0.99]" : ""
+      } ${
         isNight
-          ? "bg-black/25 border border-white/[0.08] text-white"
-          : "bg-white/35 border border-white/50 text-slate-900 shadow-sm"
+          ? "bg-black/25 border border-white/[0.08] text-white hover:border-white/15"
+          : "bg-white/35 border border-white/50 text-slate-900 shadow-sm hover:border-white/70"
       } ${className}`}
     >
       {/* Card Header */}
@@ -45,11 +51,19 @@ export const AstroCard: React.FC<AstroCardProps> = ({
             Astronomical Cycles
           </h3>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium opacity-85 shrink-0">
-          <MoonPhaseIcon phase={astro.moonPhaseValue} size={13} />
-          <span suppressHydrationWarning>
-            {astro.moonPhaseName} <span className="opacity-60">({astro.moonIlluminationPct}%)</span>
-          </span>
+        <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-medium opacity-85 shrink-0">
+          <div className="flex items-center gap-1.5">
+            <MoonPhaseIcon phase={astro.moonPhaseValue} size={13} />
+            <span suppressHydrationWarning>
+              {astro.moonPhaseName} <span className="opacity-60 font-mono">({astro.moonIlluminationPct}%)</span>
+            </span>
+          </div>
+          {onClick && (
+            <span className="flex items-center gap-0.5 text-[9.5px] font-semibold opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all font-sans">
+              <span>Details</span>
+              <ChevronRight className="w-3 h-3" />
+            </span>
+          )}
         </div>
       </div>
 
