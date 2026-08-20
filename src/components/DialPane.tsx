@@ -70,7 +70,9 @@ export const DialPane: React.FC<DialPaneProps> = ({
   return (
     <>
       <motion.section
-        className={`relative flex-1 min-h-[50vh] lg:min-h-screen flex flex-col justify-between p-6 sm:p-8 md:p-10 lg:p-12 overflow-hidden transition-colors duration-1000 select-none ${theme.textPrimary}`}
+        className={`relative flex-1 min-h-[50vh] lg:min-h-screen flex flex-col justify-between p-6 sm:p-8 md:p-10 lg:p-12 pb-32 sm:pb-36 lg:pb-32 overflow-hidden transition-colors duration-1000 select-none ${
+          theme.isDarkText ? "text-slate-900" : "text-white"
+        }`}
         style={{
           background: theme.gradientCss,
         }}
@@ -97,7 +99,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
               className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-full border shadow-md transition-all backdrop-blur-md ${
                 !theme.isDarkText
                   ? "bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                  : "bg-white/80 hover:bg-white border-slate-300/80 text-slate-900 shadow-slate-900/5"
+                  : "bg-white/90 hover:bg-white border-slate-300 text-slate-900 shadow-slate-900/10"
               }`}
               title="Click to change timezone"
             >
@@ -111,9 +113,13 @@ export const DialPane: React.FC<DialPaneProps> = ({
 
           {/* Location Title & Timezone Code */}
           <div className="pt-1">
-            <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${theme.textPrimary}`}>
+            <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
+              theme.isDarkText ? "text-slate-900" : "text-white"
+            }`}>
               {timezone.city}
-              <span className={`block text-xs sm:text-sm font-semibold mt-0.5 ${theme.textSecondary}`}>
+              <span className={`block text-xs sm:text-sm font-semibold mt-0.5 ${
+                theme.isDarkText ? "text-slate-700" : "text-slate-200"
+              }`}>
                 {timezone.country} · <span className="font-mono font-normal">{dialData.dst.zoneAbbr} ({dialData.dst.utcOffsetFormatted})</span>
               </span>
             </h2>
@@ -135,7 +141,9 @@ export const DialPane: React.FC<DialPaneProps> = ({
           <div className="flex items-baseline justify-center gap-1.5 sm:gap-3">
             <span
               suppressHydrationWarning
-              className={`font-mono text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight drop-shadow-sm ${theme.textPrimary}`}
+              className={`font-mono text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight drop-shadow-sm ${
+                theme.isDarkText ? "text-slate-950" : "text-white"
+              }`}
             >
               {dialData.hoursMinutes}
             </span>
@@ -144,7 +152,9 @@ export const DialPane: React.FC<DialPaneProps> = ({
             {showSeconds && (
               <span
                 suppressHydrationWarning
-                className={`font-mono text-2xl sm:text-3xl md:text-4xl font-bold opacity-70 ${theme.textPrimary}`}
+                className={`font-mono text-2xl sm:text-3xl md:text-4xl font-bold ${
+                  theme.isDarkText ? "text-slate-700" : "text-slate-300"
+                }`}
               >
                 :{dialData.seconds}
               </span>
@@ -154,7 +164,9 @@ export const DialPane: React.FC<DialPaneProps> = ({
             {!is24Hour && dialData.period && (
               <span
                 suppressHydrationWarning
-                className={`text-lg sm:text-2xl font-bold font-mono uppercase ml-1 opacity-80 ${theme.textSecondary}`}
+                className={`text-lg sm:text-2xl font-bold font-mono uppercase ml-1 ${
+                  theme.isDarkText ? "text-slate-800" : "text-slate-200"
+                }`}
               >
                 {dialData.period}
               </span>
@@ -164,7 +176,9 @@ export const DialPane: React.FC<DialPaneProps> = ({
           {/* Localized Date Header */}
           <div
             suppressHydrationWarning
-            className={`mt-2 flex items-center gap-2 text-sm sm:text-base font-semibold opacity-90 ${theme.textSecondary}`}
+            className={`mt-2 flex items-center gap-2 text-sm sm:text-base font-semibold ${
+              theme.isDarkText ? "text-slate-800" : "text-slate-200"
+            }`}
           >
             <Calendar className="w-4 h-4 opacity-80" />
             <span>{dialData.dateFormatted}</span>
