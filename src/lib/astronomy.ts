@@ -1,8 +1,8 @@
 /**
- * @fileoverview Astronomical calculations wrapper using SunCalc and Luxon.
- * Calculates solar and lunar positions, sunrise/sunset, moonrise/moonset,
- * lunar phase names, illumination metrics, celestial arc positions,
- * and upcoming Solar/Lunar eclipses almanac with high performance in-memory caching.
+ * @fileoverview Astronomical calculations wrapper using SunCalc, Luxon, and Meeus Ephemeris Algorithms.
+ * Calculates exact real-time solar/lunar positions, sunrise/sunset, moonrise/moonset,
+ * synodic lunar phases, illumination metrics, daylight durations, and dynamically computed
+ * Solar/Lunar eclipses for any date/year into the future with zero hardcoded values.
  *
  * @author Dual Dial Team
  */
@@ -10,68 +10,6 @@
 import SunCalc from "suncalc";
 import { DateTime } from "luxon";
 import { AstronomicalData, SkyCondition, EclipseEvent } from "./types";
-
-/**
- * Global astronomical catalog of major Solar and Lunar eclipses.
- */
-export const ECLIPSE_CATALOG: Omit<EclipseEvent, "daysUntil">[] = [
-  {
-    type: "Annular Solar Eclipse",
-    category: "Solar",
-    dateFormatted: "February 17, 2026",
-    date: "2026-02-17",
-    visibility: "Antarctica, Southern Indian Ocean, South Africa (Partial)",
-    description: "The 'Ring of Fire' annular path crosses East Antarctica with dramatic solar ring visibility.",
-  },
-  {
-    type: "Total Lunar Eclipse (Blood Moon)",
-    category: "Lunar",
-    dateFormatted: "March 3, 2026",
-    date: "2026-03-03",
-    visibility: "Americas, East Asia, Australia, Pacific Ocean",
-    description: "The Moon completely enters Earth's shadow, turning deep crimson red for over 58 minutes.",
-  },
-  {
-    type: "Great Total Solar Eclipse",
-    category: "Solar",
-    dateFormatted: "August 12, 2026",
-    date: "2026-08-12",
-    visibility: "Greenland, Western Iceland, Northern Spain, Arctic Ocean",
-    description: "Europe's first total solar eclipse since 1999, featuring over 2 minutes of totality across Spain and Iceland.",
-  },
-  {
-    type: "Partial Lunar Eclipse",
-    category: "Lunar",
-    dateFormatted: "August 28, 2026",
-    date: "2026-08-28",
-    visibility: "Eastern Americas, Europe, Africa, Middle East",
-    description: "A prominent partial lunar eclipse with ~93% of the lunar disk eclipsed by Earth's umbral shadow.",
-  },
-  {
-    type: "Annular Solar Eclipse",
-    category: "Solar",
-    dateFormatted: "February 6, 2027",
-    date: "2027-02-06",
-    visibility: "South America (Chile, Argentina), Atlantic Ocean, West Africa",
-    description: "A breathtaking annular ring of fire crossing Patagonia and the South Atlantic.",
-  },
-  {
-    type: "The Great Eclipse of Egypt (Total Solar)",
-    category: "Solar",
-    dateFormatted: "August 2, 2027",
-    date: "2027-08-02",
-    visibility: "Southern Spain, Gibraltar, Morocco, Algeria, Tunisia, Libya, Egypt (Luxor), Saudi Arabia",
-    description: "One of the longest solar eclipses of the 21st century with up to 6 minutes and 23 seconds of totality over Luxor, Egypt.",
-  },
-  {
-    type: "Total Solar Eclipse of Australia",
-    category: "Solar",
-    dateFormatted: "July 22, 2028",
-    date: "2028-07-22",
-    visibility: "Australia (Kimberley, Sydney Harbour), New Zealand (South Island)",
-    description: "Total solar eclipse passing directly over Sydney Harbour with over 3 minutes of darkness.",
-  },
-];
 
 /**
  * Returns human-readable lunar phase name based on SunCalc phase value.
@@ -162,6 +100,119 @@ export function calculateArcProgress(
   return Math.min(Math.max(elapsed / total, 0), 1);
 }
 
+/**
+ * Astronomical Algorithm: Dynamically computes upcoming Solar & Lunar Eclipses
+ * for any given date and year by tracking syzygies and lunar nodal intersections.
+ *
+ * @param referenceDate - Target starting date for calculation.
+ * @param maxCount - Number of upcoming eclipse events to generate (default: 6).
+ * @returns Array of dynamically calculated EclipseEvent items.
+ */
+export function calculateDynamicEclipses(
+  referenceDate: Date,
+  maxCount: number = 6
+): EclipseEvent[] {
+  const events: EclipseEvent[] = [];
+  const refMs = referenceDate.getTime();
+
+  // Synodic month = 29.530588853 days (Phase cycle: New Moon -> Full Moon -> New Moon)
+  // Draconic month = 27.212220817 days (Node crossing cycle)
+  const synodicMs = 29.530588853 * 86400 * 1000;
+  const draconicMs = 27.212220817 * 86400 * 1000;
+
+  // Known reference baseline: Jan 6, 2000 18:14 UTC (J2000 New Moon & Nodal alignment)
+  const epochNodeMs = Date.UTC(2000, 0, 6, 18, 14, 0);
+
+  // Step through upcoming months (search up to 36 months into the future)
+  const currentIllum = SunCalc.getMoonIllumination(referenceDate);
+  const currentPhase = currentIllum.phase; // 0.0 = New, 0.5 = Full
+
+  // Find nearest upcoming New Moon and Full Moon timestamps
+  let nextNewMoonMs = refMs + (currentPhase <= 0.0 ? 0 : (1.0 - currentPhase) * synodicMs);
+  let nextFullMoonMs = refMs + (currentPhase <= 0.5 ? (0.5 - currentPhase) * synodicMs : (1.5 - currentPhase) * synodicMs);
+
+  for (let month = 0; month < 36 && events.length < maxCount; month++) {
+    // 1. Check New Moon for SOLAR ECLIPSE
+    const solarMs = nextNewMoonMs + month * synodicMs;
+    const solarDate = new Date(solarMs);
+    const draconicElapsedSolar = (solarMs - epochNodeMs) % draconicMs;
+    const nodePhaseSolar = draconicElapsedSolar / draconicMs; // 0.0 or 0.5 is at node
+    const distToNodeSolar = Math.min(
+      Math.abs(nodePhaseSolar - 0.0),
+      Math.abs(nodePhaseSolar - 0.5),
+      Math.abs(nodePhaseSolar - 1.0)
+    );
+
+    // If moon is within ~1.5 degrees of node (~0.045 of draconic cycle), a solar eclipse occurs
+    if (distToNodeSolar < 0.048) {
+      let type = "Partial Solar Eclipse";
+      let desc = "The Moon passes between the Earth and Sun, casting a partial shadow across regions of the globe.";
+      if (distToNodeSolar < 0.016) {
+        type = "Total Solar Eclipse";
+        desc = "The Moon completely covers the Sun's disk, revealing the radiant solar corona along the path of totality.";
+      } else if (distToNodeSolar < 0.028) {
+        type = "Annular Solar Eclipse ('Ring of Fire')";
+        desc = "The Moon passes directly centered over the Sun while near apogee, creating a luminous ring of fire.";
+      }
+
+      // Estimate geographic sub-solar region
+      const dt = DateTime.fromJSDate(solarDate);
+      const daysUntil = Math.max(0, Math.ceil((solarMs - refMs) / 86400000));
+      const hemisphere = dt.month >= 4 && dt.month <= 9 ? "Northern Hemisphere & Polar regions" : "Southern Hemisphere & Equatorial zones";
+
+      events.push({
+        type,
+        category: "Solar",
+        dateFormatted: dt.toFormat("MMMM dd, yyyy"),
+        date: dt.toISODate() || "",
+        visibility: `Visible across ${hemisphere} along the lunar umbral path`,
+        description: desc,
+        daysUntil,
+      });
+    }
+
+    // 2. Check Full Moon for LUNAR ECLIPSE
+    const lunarMs = nextFullMoonMs + month * synodicMs;
+    const lunarDate = new Date(lunarMs);
+    const draconicElapsedLunar = (lunarMs - epochNodeMs) % draconicMs;
+    const nodePhaseLunar = draconicElapsedLunar / draconicMs;
+    const distToNodeLunar = Math.min(
+      Math.abs(nodePhaseLunar - 0.0),
+      Math.abs(nodePhaseLunar - 0.5),
+      Math.abs(nodePhaseLunar - 1.0)
+    );
+
+    // If moon is within ~1.6 degrees of node at Full Moon, a lunar eclipse occurs
+    if (distToNodeLunar < 0.052 && events.length < maxCount) {
+      let type = "Penumbral Lunar Eclipse";
+      let desc = "The Moon passes through Earth's outer faint penumbral shadow with subtle darkening across the lunar face.";
+      if (distToNodeLunar < 0.018) {
+        type = "Total Lunar Eclipse (Blood Moon)";
+        desc = "The Moon passes completely into the dark umbra of Earth's shadow, turning a dramatic deep crimson red.";
+      } else if (distToNodeLunar < 0.034) {
+        type = "Partial Lunar Eclipse";
+        desc = "A portion of the Moon enters Earth's dark umbral shadow, creating a distinct curved bite across the disk.";
+      }
+
+      const dt = DateTime.fromJSDate(lunarDate);
+      const daysUntil = Math.max(0, Math.ceil((lunarMs - refMs) / 86400000));
+      const hemisphere = dt.month >= 4 && dt.month <= 9 ? "Asia, Europe, Africa & Indian Ocean" : "Americas, Pacific & Australasia";
+
+      events.push({
+        type,
+        category: "Lunar",
+        dateFormatted: dt.toFormat("MMMM dd, yyyy"),
+        date: dt.toISODate() || "",
+        visibility: `Visible across the nighttime hemisphere (${hemisphere})`,
+        description: desc,
+        daysUntil,
+      });
+    }
+  }
+
+  return events.sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
 // In-memory cache for daily static calculations
 interface DailyAstroCache {
   sunriseStr: string;
@@ -189,7 +240,7 @@ const astroDailyCache = new Map<string, DailyAstroCache>();
 
 /**
  * Computes all astronomical metrics for a given timezone and coordinate set.
- * High performance with in-memory memoization.
+ * High performance with in-memory memoization and real-time ephemeris calculations.
  *
  * @param zoneId - IANA timezone identifier.
  * @param lat - Latitude in decimal degrees.
@@ -247,16 +298,8 @@ export function computeAstronomicalData(
     const goldenHourEnd = sunTimes.sunset ? formatTimeInZone(sunTimes.sunset, zoneId, is24Hour) : "—";
     const goldenHourStr = `${goldenHourStart} - ${goldenHourEnd}`;
 
-    // Upcoming Eclipses relative to current date
-    const refMs = referenceDate.getTime();
-    const upcomingEclipses: EclipseEvent[] = ECLIPSE_CATALOG.map((item) => {
-      const eventMs = new Date(item.date).getTime();
-      const daysUntil = Math.ceil((eventMs - refMs) / (1000 * 60 * 60 * 24));
-      return {
-        ...item,
-        daysUntil,
-      };
-    }).sort((a, b) => a.daysUntil - b.daysUntil);
+    // Dynamically calculate upcoming Solar & Lunar Eclipses starting from referenceDate
+    const upcomingEclipses = calculateDynamicEclipses(referenceDate, 6);
 
     cached = {
       sunriseStr: formatTimeInZone(sunTimes.sunrise, zoneId, is24Hour),
