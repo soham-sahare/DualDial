@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * @fileoverview Dual Dial Main Page Component.
- * Implements the 50/50 split-screen layout comparing two timezones (IST primary default and secondary target),
- * with dynamic celestial graphics, DST natural language analytics, 12h/24h toggle, and 24-hour time scrubbing.
- *
- * @author Dual Dial Team
- */
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { DEFAULT_PRIMARY_TIMEZONE, DEFAULT_SECONDARY_TIMEZONE } from "@/lib/timezones";
 import { TimezoneInfo } from "@/lib/types";
@@ -15,26 +7,24 @@ import { HeaderControls } from "@/components/HeaderControls";
 import { DialPane } from "@/components/DialPane";
 import { TimeScrubber } from "@/components/TimeScrubber";
 
-/**
- * Dual Dial Single Page Application Main Component.
- *
- * @returns React Component for the entire SPA.
- */
+// Stable SSR baseline date to eliminate hydration mismatches completely
+const SSR_BASELINE_DATE = new Date("2026-08-20T12:00:00Z");
+
 export default function DualDialPage() {
-  // 1. Timezone States
   const [primaryTz, setPrimaryTz] = useState<TimezoneInfo>(DEFAULT_PRIMARY_TIMEZONE);
   const [secondaryTz, setSecondaryTz] = useState<TimezoneInfo>(DEFAULT_SECONDARY_TIMEZONE);
 
-  // 2. Format & Display Preferences
   const [is24Hour, setIs24Hour] = useState<boolean>(false);
   const [showSeconds, setShowSeconds] = useState<boolean>(true);
 
-  // 3. Live Ticking Clock State
-  const [liveDate, setLiveDate] = useState<Date>(() => new Date());
+  const [mounted, setMounted] = useState<boolean>(false);
+  const [liveDate, setLiveDate] = useState<Date>(SSR_BASELINE_DATE);
   const [scrubbedMinutes, setScrubbedMinutes] = useState<number | null>(null);
 
-  // 4. Update live clock every 1 second when in live mode
   useEffect(() => {
+    setMounted(true);
+    setLiveDate(new Date());
+
     const timer = setInterval(() => {
       setLiveDate(new Date());
     }, 1000);
@@ -42,19 +32,18 @@ export default function DualDialPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // 5. Active Reference Date (either live or scrubbed simulation)
   const activeDate = useMemo(() => {
+    const base = mounted ? liveDate : SSR_BASELINE_DATE;
     if (scrubbedMinutes === null) {
-      return liveDate;
+      return base;
     }
-    const simulated = new Date(liveDate);
+    const simulated = new Date(base);
     const targetHours = Math.floor(scrubbedMinutes / 60);
     const targetMinutes = scrubbedMinutes % 60;
     simulated.setHours(targetHours, targetMinutes, 0, 0);
     return simulated;
-  }, [liveDate, scrubbedMinutes]);
+  }, [mounted, liveDate, scrubbedMinutes]);
 
-  // 6. Swap Sides Handler
   const handleSwapSides = useCallback(() => {
     setPrimaryTz((prevPrimary) => {
       const nextPrimary = secondaryTz;
@@ -74,9 +63,9 @@ export default function DualDialPage() {
         onSwapSides={handleSwapSides}
       />
 
-      {/* 50/50 Split Screen Container */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-screen pt-16 pb-24 lg:pb-20">
-        {/* Left Side: Primary Timezone (Default: IST) */}
+      {/* 50/50 Split Screen Container (Stacked on Mobile, Side-by-Side on LG) */}
+      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-screen pt-14 sm:pt-16 pb-36 sm:pb-32 lg:pb-24">
+        {/* Left Side: Primary Timezone */}
         <DialPane
           timezone={primaryTz}
           onTimezoneChange={setPrimaryTz}
@@ -95,7 +84,7 @@ export default function DualDialPage() {
           </div>
         </div>
 
-        {/* Right Side: Target / Secondary Timezone (Default: EST/EDT) */}
+        {/* Right Side: Compared / Secondary Timezone */}
         <DialPane
           timezone={secondaryTz}
           onTimezoneChange={setSecondaryTz}
@@ -109,7 +98,7 @@ export default function DualDialPage() {
       </div>
 
       {/* Bottom Floating 24-Hour Time Scrubber */}
-      <div className="fixed bottom-4 left-0 right-0 z-40">
+      <div className="fixed bottom-3 sm:bottom-4 left-0 right-0 z-40">
         <TimeScrubber
           isLive={scrubbedMinutes === null}
           scrubbedMinutes={scrubbedMinutes}
