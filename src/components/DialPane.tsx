@@ -2,14 +2,14 @@
 
 /**
  * @fileoverview Single-Screen Responsive DialPane Component.
- * Fits precisely into 100dvh without vertical scrolling or card cutoffs on mobile and desktop.
+ * Styled with Apple VisionOS/macOS frosted liquid glassmorphism.
  *
  * @author Dual Dial Team
  */
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, Calendar, Clock, AlertCircle, ShieldCheck, Sparkles, ChevronRight } from "lucide-react";
+import { ChevronDown, Calendar, Clock, AlertCircle, ShieldCheck, ChevronRight } from "lucide-react";
 import { TimezoneInfo } from "@/lib/types";
 import { useDialTime } from "@/lib/useDialTime";
 import { getSkyTheme } from "@/lib/gradients";
@@ -69,21 +69,25 @@ export const DialPane: React.FC<DialPaneProps> = ({
 
         {/* TOP SECTION: Location Header & Scaled Arc */}
         <div className="relative z-20 flex flex-col gap-1 sm:gap-2 shrink-0">
-          {/* Top Bar: Pane Tag & Location Selector Button */}
+          {/* Top Bar: Apple Glass Badge & Location Selector Button */}
           <div className="flex items-center justify-between gap-2">
             <span
-              className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-wider uppercase border shadow-sm backdrop-blur-md ${theme.badgeBg} ${theme.badgeText}`}
+              className={`px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-wider uppercase shadow-sm ${
+                !theme.isDarkText
+                  ? "apple-glass text-white"
+                  : "apple-glass-light text-slate-900"
+              }`}
             >
               {paneLabel} · {theme.celestialTag}
             </span>
 
-            {/* Change Location Button */}
+            {/* Apple Glass Location Button */}
             <button
               onClick={() => setIsPickerOpen(true)}
-              className={`group flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-full border shadow-sm transition-all backdrop-blur-md ${
+              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 ${
                 !theme.isDarkText
-                  ? "bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                  : "bg-white/90 hover:bg-white border-slate-300 text-slate-900 shadow-slate-900/10"
+                  ? "apple-glass text-white hover:bg-white/20"
+                  : "apple-glass-light text-slate-900 hover:bg-white/60"
               }`}
               title="Click to change timezone"
             >
@@ -91,19 +95,19 @@ export const DialPane: React.FC<DialPaneProps> = ({
                 {timezone.flag}
               </span>
               <span className="text-[11px] sm:text-xs font-bold truncate max-w-[100px] sm:max-w-[150px]">{timezone.city}</span>
-              <ChevronDown className="w-3 h-3 opacity-60 group-hover:translate-y-0.5 transition-transform" />
+              <ChevronDown className="w-3 h-3 opacity-70 group-hover:translate-y-0.5 transition-transform" />
             </button>
           </div>
 
           {/* Location Title & Timezone Code */}
           <div className="pt-0.5 flex items-baseline justify-between gap-2">
-            <h2 className={`text-base sm:text-2xl md:text-3xl font-extrabold tracking-tight truncate ${
+            <h2 className={`text-base sm:text-2xl md:text-3xl font-extrabold tracking-tight truncate drop-shadow-sm ${
               theme.isDarkText ? "text-slate-900" : "text-white"
             }`}>
               {timezone.city}
             </h2>
             <span className={`text-[10px] sm:text-xs font-semibold truncate ${
-              theme.isDarkText ? "text-slate-700" : "text-slate-300"
+              theme.isDarkText ? "text-slate-700" : "text-white/80"
             }`}>
               {timezone.country} · <span className="font-mono font-normal" suppressHydrationWarning>{dialData.dst.zoneAbbr} ({dialData.dst.utcOffsetFormatted})</span>
             </span>
@@ -124,7 +128,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
           <div className="flex items-baseline justify-center gap-1 sm:gap-2">
             <span
               suppressHydrationWarning
-              className={`font-mono text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight drop-shadow-sm leading-none ${
+              className={`font-mono text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight drop-shadow-md leading-none ${
                 theme.isDarkText ? "text-slate-950" : "text-white"
               }`}
             >
@@ -136,7 +140,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
               <span
                 suppressHydrationWarning
                 className={`font-mono text-lg sm:text-2xl md:text-3xl font-bold ${
-                  theme.isDarkText ? "text-slate-700" : "text-slate-300"
+                  theme.isDarkText ? "text-slate-700" : "text-white/75"
                 }`}
               >
                 :{dialData.seconds}
@@ -148,7 +152,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
               <span
                 suppressHydrationWarning
                 className={`text-xs sm:text-lg font-bold font-mono uppercase ml-0.5 ${
-                  theme.isDarkText ? "text-slate-800" : "text-slate-200"
+                  theme.isDarkText ? "text-slate-800" : "text-white/80"
                 }`}
               >
                 {dialData.period}
@@ -160,20 +164,20 @@ export const DialPane: React.FC<DialPaneProps> = ({
           <div
             suppressHydrationWarning
             className={`mt-0.5 sm:mt-1 flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold ${
-              theme.isDarkText ? "text-slate-800" : "text-slate-200"
+              theme.isDarkText ? "text-slate-800" : "text-white/85"
             }`}
           >
             <Calendar className="w-3 h-3 opacity-80 shrink-0" />
             <span suppressHydrationWarning>{dialData.dateFormatted}</span>
           </div>
 
-          {/* DST & Relative Offset Card (When Secondary) */}
+          {/* Apple Glass DST & Relative Offset Card (When Secondary) */}
           {isSecondary ? (
             <motion.div
-              className={`mt-1 sm:mt-2 w-full max-w-sm p-2 sm:p-2.5 rounded-xl border text-left shadow-lg backdrop-blur-2xl ${
+              className={`mt-1 sm:mt-2 w-full max-w-sm p-2.5 sm:p-3 rounded-2xl border text-left shadow-lg transition-all ${
                 !theme.isDarkText
-                  ? "bg-slate-900/75 border-white/20 text-white shadow-black/40"
-                  : "bg-white/90 border-white text-slate-900 shadow-slate-900/10"
+                  ? "apple-glass-dark text-white"
+                  : "apple-glass-light text-slate-900"
               }`}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -184,19 +188,19 @@ export const DialPane: React.FC<DialPaneProps> = ({
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider opacity-70 flex items-center gap-1">
-                    <Clock className="w-3 h-3 opacity-80 text-blue-500 shrink-0" />
+                    <Clock className="w-3 h-3 opacity-80 text-sky-400 shrink-0" />
                     <span>vs {referenceTimezone.id === "Asia/Kolkata" ? "IST" : referenceTimezone.city}</span>
                   </div>
-                  <div className="text-xs sm:text-sm font-black mt-0.5 text-blue-600 dark:text-blue-400" suppressHydrationWarning>
+                  <div className="text-xs sm:text-sm font-black mt-0.5 text-sky-400 dark:text-sky-300" suppressHydrationWarning>
                     {dialData.dst.relativeOffsetText}
                   </div>
                 </div>
 
                 <div
-                  className={`px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold font-mono border shrink-0 ${
+                  className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold font-mono border shrink-0 ${
                     dialData.dst.isDst
-                      ? "bg-amber-500/20 text-amber-950 dark:text-amber-300 border-amber-500/40"
-                      : "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30"
+                      ? "bg-amber-400/20 text-amber-200 border-amber-300/40 shadow-inner"
+                      : "bg-white/10 text-white/80 border-white/20"
                   }`}
                   suppressHydrationWarning
                 >
@@ -205,11 +209,11 @@ export const DialPane: React.FC<DialPaneProps> = ({
               </div>
 
               {/* Natural Language DST Status Text */}
-              <div className="mt-1 pt-1 border-t border-current/15 space-y-0.5 text-[9px] sm:text-[10px]">
+              <div className="mt-1.5 pt-1.5 border-t border-current/15 space-y-0.5 text-[9px] sm:text-[10px]">
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck
                     className={`w-3 h-3 shrink-0 ${
-                      dialData.dst.isDst ? "text-emerald-500" : "opacity-60"
+                      dialData.dst.isDst ? "text-emerald-400" : "opacity-60"
                     }`}
                   />
                   <span className="font-semibold truncate" suppressHydrationWarning>
@@ -218,17 +222,17 @@ export const DialPane: React.FC<DialPaneProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1.5 opacity-85">
-                  <AlertCircle className="w-3 h-3 shrink-0 opacity-80 text-amber-500" />
+                  <AlertCircle className="w-3 h-3 shrink-0 opacity-80 text-amber-400" />
                   <span className="font-medium truncate" suppressHydrationWarning>{dialData.dst.upcomingShiftText}</span>
                 </div>
               </div>
             </motion.div>
           ) : (
             <div
-              className={`mt-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold border backdrop-blur-md shadow-sm ${
+              className={`mt-1 px-3 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold shadow-sm ${
                 !theme.isDarkText
-                  ? "bg-white/10 border-white/20 text-slate-200"
-                  : "bg-white/80 border-slate-300/80 text-slate-800"
+                  ? "apple-glass text-white"
+                  : "apple-glass-light text-slate-800"
               }`}
             >
               Base Reference · Indian Standard Time (UTC+5:30)
@@ -236,16 +240,16 @@ export const DialPane: React.FC<DialPaneProps> = ({
           )}
         </div>
 
-        {/* BOTTOM SECTION: Mobile 'View Details' Button vs Desktop Full Card */}
+        {/* BOTTOM SECTION: Mobile Apple Glass Button vs Desktop Full Card */}
         <div className="relative z-20 mt-auto pt-1 shrink-0">
-          {/* Mobile: Compact 'View Details' Pill Button */}
+          {/* Mobile: Apple Glass 'Celestial Details' Button */}
           <div className="md:hidden flex items-center justify-center">
             <button
               onClick={() => setIsAstroModalOpen(true)}
-              className={`group flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider border backdrop-blur-md transition-all shadow-sm ${
+              className={`group flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-semibold tracking-wider transition-all active:scale-95 shadow-sm ${
                 !theme.isDarkText
-                  ? "bg-white/10 hover:bg-white/20 border-white/20 text-white"
-                  : "bg-white/85 hover:bg-white border-slate-300 text-slate-900"
+                  ? "apple-glass text-white hover:bg-white/20"
+                  : "apple-glass-light text-slate-900 hover:bg-white/60"
               }`}
             >
               <MoonPhaseIcon phase={dialData.astro.moonPhaseValue} size={14} />

@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * @fileoverview Compact Glassmorphic Astronomical Data Card.
- * Proportionally scaled for single-page 100dvh layouts on mobile and desktop.
+ * @fileoverview Apple Glassmorphic Astronomical Data Card Component.
+ * Features frosted liquid glass materials, specular highlights, and compact ephemeris metrics.
  *
  * @author Dual Dial Team
  */
@@ -30,10 +30,10 @@ export const AstroCard: React.FC<AstroCardProps> = ({
 
   return (
     <div
-      className={`rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 md:p-4 border transition-all duration-500 shadow-lg backdrop-blur-xl shrink-0 ${
+      className={`rounded-2xl p-3 sm:p-3.5 md:p-4 transition-all duration-500 shrink-0 ${
         isNight
-          ? "bg-slate-900/70 border-white/15 text-white shadow-black/40"
-          : "bg-white/85 border-slate-300/80 text-slate-900 shadow-slate-900/10"
+          ? "apple-glass-dark text-white"
+          : "apple-glass-light text-slate-900"
       } ${className}`}
     >
       {/* Card Header: Phase badge */}
@@ -55,8 +55,8 @@ export const AstroCard: React.FC<AstroCardProps> = ({
       {/* Grid of solar & lunar times */}
       <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
         {/* Sunrise */}
-        <div className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-lg bg-current/[0.04]">
-          <Sunrise className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 shrink-0" />
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
+          <Sunrise className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <div className="min-w-0">
             <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">Rise</div>
             <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.sunrise}</div>
@@ -64,8 +64,8 @@ export const AstroCard: React.FC<AstroCardProps> = ({
         </div>
 
         {/* Sunset */}
-        <div className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-lg bg-current/[0.04]">
-          <Sunset className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-orange-500 shrink-0" />
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
+          <Sunset className="w-3.5 h-3.5 text-orange-500 shrink-0" />
           <div className="min-w-0">
             <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">Set</div>
             <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.sunset}</div>
@@ -73,8 +73,8 @@ export const AstroCard: React.FC<AstroCardProps> = ({
         </div>
 
         {/* Moonrise */}
-        <div className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-lg bg-current/[0.04]">
-          <Moon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-400 shrink-0" />
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
+          <Moon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
           <div className="min-w-0">
             <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">MRise</div>
             <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.moonrise || "—"}</div>
@@ -82,8 +82,8 @@ export const AstroCard: React.FC<AstroCardProps> = ({
         </div>
 
         {/* Moonset */}
-        <div className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-lg bg-current/[0.04]">
-          <Moon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-400 rotate-180 shrink-0" />
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-current/[0.05] border border-current/10">
+          <Moon className="w-3.5 h-3.5 text-blue-400 rotate-180 shrink-0" />
           <div className="min-w-0">
             <div className="text-[8px] uppercase font-bold tracking-wider opacity-60">MSet</div>
             <div className="font-mono font-bold truncate" suppressHydrationWarning>{astro.moonset || "—"}</div>
