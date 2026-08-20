@@ -2,14 +2,14 @@
 
 /**
  * @fileoverview Dual Dial Main Page Component.
- * Single-page 100dvh split-screen layout comparing two timezones with zero vertical scrolling
- * and full localStorage persistence for custom selected cities and display preferences.
+ * Single-page 100dvh split-screen layout comparing two timezones with zero vertical scrolling,
+ * floating glassmorphic navbars, mobile celestial drawer modals, and full localStorage persistence.
  *
  * @author Dual Dial Team
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { DEFAULT_PRIMARY_TIMEZONE, DEFAULT_SECONDARY_TIMEZONE, getTimezoneById } from "@/lib/timezones";
+import { DEFAULT_PRIMARY_TIMEZONE, DEFAULT_SECONDARY_TIMEZONE } from "@/lib/timezones";
 import { TimezoneInfo } from "@/lib/types";
 import { HeaderControls } from "@/components/HeaderControls";
 import { DialPane } from "@/components/DialPane";
@@ -59,9 +59,7 @@ export default function DualDialPage() {
       if (savedSec !== null) {
         setShowSeconds(JSON.parse(savedSec));
       }
-    } catch {
-      // Gracefully ignore local storage errors
-    }
+    } catch {}
   }, []);
 
   // 5. Update live clock every 1 second when in live mode
@@ -134,8 +132,8 @@ export default function DualDialPage() {
   }, [secondaryTz]);
 
   return (
-    <main className="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
-      {/* Top Floating Navigation Bar */}
+    <main className="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none relative">
+      {/* Floating Header Controls (Left Brand Logo & Right Action Pill) */}
       <HeaderControls
         is24Hour={is24Hour}
         onToggle24Hour={handleToggle24Hour}
@@ -145,7 +143,7 @@ export default function DualDialPage() {
       />
 
       {/* 100dvh Split Screen View (Desktop side-by-side / Mobile top-and-bottom stacked) */}
-      <div className="flex-1 min-h-0 w-full flex flex-col md:flex-row overflow-hidden pt-11 sm:pt-14">
+      <div className="flex-1 min-h-0 w-full flex flex-col md:flex-row overflow-hidden pt-12 sm:pt-14 pb-14 sm:pb-16">
         {/* Primary Timezone (Persisted) */}
         <DialPane
           timezone={primaryTz}
@@ -178,8 +176,8 @@ export default function DualDialPage() {
         />
       </div>
 
-      {/* Bottom Compact 24-Hour Time Travel Scrubber */}
-      <div className="shrink-0 z-30 pb-2 pt-1">
+      {/* Bottom Floating 24-Hour Time Travel Scrubber */}
+      <div className="fixed bottom-2.5 sm:bottom-3 left-0 right-0 z-40 px-2 sm:px-4 pointer-events-auto">
         <TimeScrubber
           isLive={scrubbedMinutes === null}
           scrubbedMinutes={scrubbedMinutes}
