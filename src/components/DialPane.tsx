@@ -2,7 +2,7 @@
 
 /**
  * @fileoverview Single-Screen Responsive DialPane Component.
- * Styled with Apple VisionOS/macOS frosted liquid glassmorphism.
+ * Full-bleed gradient background with Apple VisionOS/macOS frosted liquid glassmorphism.
  *
  * @author Dual Dial Team
  */
@@ -56,7 +56,7 @@ export const DialPane: React.FC<DialPaneProps> = ({
   return (
     <>
       <motion.section
-        className={`relative flex-1 min-h-0 w-full h-full flex flex-col justify-between p-3 sm:p-4 md:p-6 overflow-hidden transition-colors duration-1000 select-none ${
+        className={`relative flex-1 min-h-0 w-full h-full flex flex-col justify-between pt-12 pb-14 sm:pt-16 sm:pb-16 px-3 sm:px-6 md:px-8 overflow-hidden transition-colors duration-1000 select-none ${
           theme.isDarkText ? "text-slate-900" : "text-white"
         }`}
         style={{ background: theme.gradientCss }}

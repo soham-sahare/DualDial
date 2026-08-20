@@ -2,8 +2,8 @@
 
 /**
  * @fileoverview Dual Dial Main Page Component.
- * Single-page 100dvh split-screen layout comparing two timezones with zero vertical scrolling,
- * floating glassmorphic navbars, mobile celestial drawer modals, and full localStorage persistence.
+ * 100% Full-bleed edge-to-edge sky gradients with floating Apple glass navbars
+ * and floating bottom time travel scrubber.
  *
  * @author Dual Dial Team
  */
@@ -132,7 +132,7 @@ export default function DualDialPage() {
   }, [secondaryTz]);
 
   return (
-    <main className="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none relative">
+    <main className="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden font-sans select-none relative">
       {/* Floating Header Controls (Left Brand Logo & Right Action Pill) */}
       <HeaderControls
         is24Hour={is24Hour}
@@ -142,9 +142,9 @@ export default function DualDialPage() {
         onSwapSides={handleSwapSides}
       />
 
-      {/* 100dvh Split Screen View (Desktop side-by-side / Mobile top-and-bottom stacked) */}
-      <div className="flex-1 min-h-0 w-full flex flex-col md:flex-row overflow-hidden pt-12 sm:pt-14 pb-14 sm:pb-16">
-        {/* Primary Timezone (Persisted) */}
+      {/* 100% Full-Bleed Edge-to-Edge Split Screen View */}
+      <div className="flex-1 min-h-0 w-full h-full flex flex-col md:flex-row overflow-hidden">
+        {/* Primary Timezone (Full bleed from top:0 to bottom:0) */}
         <DialPane
           timezone={primaryTz}
           onTimezoneChange={handlePrimaryTzChange}
@@ -157,13 +157,13 @@ export default function DualDialPage() {
         />
 
         {/* Central Split Divider Glow Line */}
-        <div className="hidden md:block w-[1px] bg-white/15 relative z-30 shadow-[0_0_12px_rgba(255,255,255,0.2)]">
-          <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full bg-slate-900/90 border border-white/20 flex items-center justify-center text-[10px] font-mono text-slate-400">
+        <div className="hidden md:block w-[1px] bg-white/20 relative z-30 shadow-[0_0_12px_rgba(255,255,255,0.3)]">
+          <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full apple-glass-pill flex items-center justify-center text-[9px] font-mono font-bold text-white/80">
             VS
           </div>
         </div>
 
-        {/* Target / Secondary Timezone (Persisted) */}
+        {/* Target / Secondary Timezone (Full bleed from top:0 to bottom:0) */}
         <DialPane
           timezone={secondaryTz}
           onTimezoneChange={handleSecondaryTzChange}
@@ -177,7 +177,7 @@ export default function DualDialPage() {
       </div>
 
       {/* Bottom Floating 24-Hour Time Travel Scrubber */}
-      <div className="fixed bottom-2.5 sm:bottom-3 left-0 right-0 z-40 px-2 sm:px-4 pointer-events-auto">
+      <div className="fixed bottom-2.5 sm:bottom-4 left-0 right-0 z-40 px-2 sm:px-4 pointer-events-auto">
         <TimeScrubber
           isLive={scrubbedMinutes === null}
           scrubbedMinutes={scrubbedMinutes}
