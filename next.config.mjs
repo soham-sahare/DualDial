@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  productionBrowserSourceMaps: false,
+  turbopack: {},
   webpack: (config) => {
     config.ignoreWarnings = [
       { module: /node_modules\/framer-motion/ },
