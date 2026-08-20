@@ -77,8 +77,19 @@ export function computeRelativeOffset(
   }
 }
 
+// Simple in-memory cache for transition calculations (zoneId + year + month + isDst)
+const transitionCache = new Map<
+  string,
+  {
+    transitionDate: DateTime;
+    shiftType: "spring forward" | "fall back";
+    hoursShift: number;
+  } | null
+>();
+
 /**
  * Searches the upcoming 365 days for the next Daylight Saving Time transition in a timezone.
+ * Optimized with fast monthly-stepping and memoization to ensure ultra-fast 0ms ticks.
  *
  * @param startDt - The reference DateTime in the target timezone.
  * @returns Object describing the transition date and direction, or null if no transition occurs.
@@ -93,47 +104,72 @@ export function findNextDstTransition(
   const zoneId = startDt.zoneName;
   if (!zoneId) return null;
 
-  let currentDt = startDt.startOf("hour");
-  const initialOffset = currentDt.offset;
+  // Cache key based on zone, year, month, and active DST
+  const cacheKey = `${zoneId}:${startDt.year}-${startDt.month}:${startDt.isInDST ? 1 : 0}`;
+  if (transitionCache.has(cacheKey)) {
+    return transitionCache.get(cacheKey)!;
+  }
 
-  // Step forward day-by-day up to 370 days to check for offset changes
-  let detectedDay: DateTime | null = null;
-  for (let d = 1; d <= 370; d++) {
-    const nextCheck = currentDt.plus({ days: d });
-    if (nextCheck.offset !== initialOffset) {
-      detectedDay = nextCheck;
+  const initialOffset = startDt.offset;
+
+  // 1. Fast search: step month by month (1 to 12 months)
+  let foundMonth: DateTime | null = null;
+  let prevMonth = startDt;
+
+  for (let m = 1; m <= 13; m++) {
+    const nextMonth = startDt.plus({ months: m });
+    if (nextMonth.offset !== initialOffset) {
+      foundMonth = nextMonth;
+      prevMonth = startDt.plus({ months: m - 1 });
       break;
     }
   }
 
-  if (!detectedDay) {
-    return null; // Timezone does not observe DST in the upcoming year
+  if (!foundMonth) {
+    transitionCache.set(cacheKey, null);
+    return null;
   }
 
-  // Refine down to the exact hour of transition
-  let low = detectedDay.minus({ days: 1 }).startOf("day");
-  let high = detectedDay.plus({ days: 1 }).endOf("day");
+  // 2. Step day by day within the transition month (max 31 steps)
+  let detectedDay: DateTime = foundMonth;
+  let testDay = prevMonth;
+
+  while (testDay <= foundMonth) {
+    if (testDay.offset !== initialOffset) {
+      detectedDay = testDay;
+      break;
+    }
+    testDay = testDay.plus({ days: 1 });
+  }
+
+  // 3. Step hour by hour within that day (max 24 steps)
+  const low = detectedDay.minus({ days: 1 }).startOf("day");
+  const high = detectedDay.plus({ days: 1 }).endOf("day");
   let transitionHour = detectedDay;
 
-  let testTime = low;
-  while (testTime <= high) {
-    if (testTime.offset !== initialOffset) {
-      transitionHour = testTime;
+  let testHour = low;
+  while (testHour <= high) {
+    if (testHour.offset !== initialOffset) {
+      transitionHour = testHour;
       break;
     }
-    testTime = testTime.plus({ hours: 1 });
+    testHour = testHour.plus({ hours: 1 });
   }
 
   const newOffset = transitionHour.offset;
   const offsetDiffMinutes = newOffset - initialOffset;
   const hoursShift = Math.abs(offsetDiffMinutes / 60);
-  const shiftType = offsetDiffMinutes > 0 ? "spring forward" : "fall back";
+  const shiftType: "spring forward" | "fall back" =
+    offsetDiffMinutes > 0 ? "spring forward" : "fall back";
 
-  return {
+  const result = {
     transitionDate: transitionHour,
     shiftType,
     hoursShift: hoursShift || 1,
   };
+
+  transitionCache.set(cacheKey, result);
+  return result;
 }
 
 /**
