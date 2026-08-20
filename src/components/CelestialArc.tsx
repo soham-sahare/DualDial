@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * @fileoverview Responsive Parabolic Celestial Arc Component.
+ * Animates the glowing 2D vector Sun and Moon along a parabolic sky arc
+ * proportionally scaled for compact single-screen viewports.
+ *
+ * @author Dual Dial Team
+ */
+
 import React from "react";
 import { motion } from "framer-motion";
 import { AstronomicalData, SkyCondition } from "@/lib/types";
@@ -10,14 +18,14 @@ interface CelestialArcProps {
   astro: AstronomicalData;
   /** Sky condition for styling. */
   skyCondition: SkyCondition;
-  /** Height in pixels of the celestial arc container (default: 130). */
+  /** Height in pixels of the celestial arc container (default responsive). */
   height?: number;
 }
 
 function getParabolicPosition(progress: number): { x: number; y: number } {
   const clampedX = Math.max(0.08, Math.min(0.92, progress));
   const normalized = (clampedX - 0.5) * 2;
-  const y = 20 + 64 * (normalized * normalized);
+  const y = 18 + 66 * (normalized * normalized);
   return {
     x: +((clampedX * 100).toFixed(2)),
     y: +(y.toFixed(2)),
@@ -27,7 +35,7 @@ function getParabolicPosition(progress: number): { x: number; y: number } {
 export const CelestialArc: React.FC<CelestialArcProps> = ({
   astro,
   skyCondition,
-  height = 120,
+  height,
 }) => {
   const isNight = skyCondition === "night" || skyCondition === "dusk";
 
@@ -36,8 +44,8 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
 
   return (
     <div
-      className="relative w-full overflow-hidden select-none"
-      style={{ height }}
+      className="relative w-full h-[60px] sm:h-[80px] md:h-[105px] overflow-hidden select-none"
+      style={height ? { height } : undefined}
       aria-label="Celestial Sky Arc"
       suppressHydrationWarning
     >
@@ -104,11 +112,11 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
         suppressHydrationWarning
       >
         <div className="relative flex items-center justify-center">
-          <div className="absolute w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-amber-400/30 blur-md animate-pulse-slow pointer-events-none" />
-          <div className="absolute w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-yellow-300/50 blur-sm pointer-events-none" />
+          <div className="absolute w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-amber-400/30 blur-md animate-pulse-slow pointer-events-none" />
+          <div className="absolute w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-yellow-300/50 blur-sm pointer-events-none" />
 
-          <div className="relative w-7 sm:w-8 h-7 sm:h-8 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-yellow-100 shadow-[0_0_20px_rgba(245,158,11,0.8)] flex items-center justify-center border border-yellow-200/80">
-            <div className="w-3 sm:w-4 h-3 sm:h-4 rounded-full bg-white/80 blur-[1px]" />
+          <div className="relative w-5 sm:w-7 h-5 sm:h-7 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-yellow-100 shadow-[0_0_16px_rgba(245,158,11,0.8)] flex items-center justify-center border border-yellow-200/80">
+            <div className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 rounded-full bg-white/80 blur-[1px]" />
           </div>
         </div>
       </motion.div>
@@ -131,27 +139,27 @@ export const CelestialArc: React.FC<CelestialArcProps> = ({
         suppressHydrationWarning
       >
         <div className="relative flex items-center justify-center">
-          <div className="absolute w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-blue-300/20 blur-md pointer-events-none" />
-          <MoonPhaseIcon phase={astro.moonPhaseValue} size={28} />
+          <div className="absolute w-10 sm:w-14 h-10 sm:h-14 rounded-full bg-blue-300/20 blur-md pointer-events-none" />
+          <MoonPhaseIcon phase={astro.moonPhaseValue} size={22} className="sm:w-6 sm:h-6" />
         </div>
       </motion.div>
 
       {/* Horizon Label Indicators */}
       <div
-        className={`absolute bottom-1 left-2 sm:left-4 right-2 sm:right-4 flex items-center justify-between text-[10px] sm:text-[11px] font-semibold tracking-wider ${
+        className={`absolute bottom-0.5 left-2 sm:left-4 right-2 sm:right-4 flex items-center justify-between text-[9px] sm:text-[11px] font-semibold tracking-wider ${
           isNight ? "text-slate-300 opacity-85" : "text-slate-800 opacity-90"
         }`}
       >
         <span className="flex items-center gap-1 sm:gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-amber-500 inline-block shadow-sm" />
+          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500 inline-block shadow-sm" />
           <span suppressHydrationWarning>{astro.sunrise}</span>
         </span>
-        <span className="text-[9px] sm:text-[10px] tracking-widest uppercase font-bold opacity-80 truncate px-1">
+        <span className="text-[8px] sm:text-[10px] tracking-widest uppercase font-bold opacity-80 truncate px-1">
           {skyCondition === "night" ? "Lunar Arc" : `Noon: ${astro.solarNoon}`}
         </span>
         <span className="flex items-center gap-1 sm:gap-1.5">
           <span suppressHydrationWarning>{astro.sunset}</span>
-          <span className="w-2 h-2 rounded-full bg-orange-500 inline-block shadow-sm" />
+          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-orange-500 inline-block shadow-sm" />
         </span>
       </div>
     </div>

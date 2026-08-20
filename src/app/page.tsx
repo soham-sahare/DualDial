@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * @fileoverview Dual Dial Main Page Component.
+ * Single-page 100dvh split-screen layout comparing two timezones with zero vertical scrolling
+ * on mobile, tablet, and desktop devices.
+ *
+ * @author Dual Dial Team
+ */
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { DEFAULT_PRIMARY_TIMEZONE, DEFAULT_SECONDARY_TIMEZONE } from "@/lib/timezones";
 import { TimezoneInfo } from "@/lib/types";
@@ -7,24 +15,21 @@ import { HeaderControls } from "@/components/HeaderControls";
 import { DialPane } from "@/components/DialPane";
 import { TimeScrubber } from "@/components/TimeScrubber";
 
-// Stable SSR baseline date to eliminate hydration mismatches completely
-const SSR_BASELINE_DATE = new Date("2026-08-20T12:00:00Z");
-
 export default function DualDialPage() {
+  // 1. Timezone States
   const [primaryTz, setPrimaryTz] = useState<TimezoneInfo>(DEFAULT_PRIMARY_TIMEZONE);
   const [secondaryTz, setSecondaryTz] = useState<TimezoneInfo>(DEFAULT_SECONDARY_TIMEZONE);
 
+  // 2. Format & Display Preferences
   const [is24Hour, setIs24Hour] = useState<boolean>(false);
   const [showSeconds, setShowSeconds] = useState<boolean>(true);
 
-  const [mounted, setMounted] = useState<boolean>(false);
-  const [liveDate, setLiveDate] = useState<Date>(SSR_BASELINE_DATE);
+  // 3. Live Ticking Clock State
+  const [liveDate, setLiveDate] = useState<Date>(() => new Date());
   const [scrubbedMinutes, setScrubbedMinutes] = useState<number | null>(null);
 
+  // 4. Update live clock every 1 second when in live mode
   useEffect(() => {
-    setMounted(true);
-    setLiveDate(new Date());
-
     const timer = setInterval(() => {
       setLiveDate(new Date());
     }, 1000);
@@ -32,18 +37,19 @@ export default function DualDialPage() {
     return () => clearInterval(timer);
   }, []);
 
+  // 5. Active Reference Date (either live or scrubbed simulation)
   const activeDate = useMemo(() => {
-    const base = mounted ? liveDate : SSR_BASELINE_DATE;
     if (scrubbedMinutes === null) {
-      return base;
+      return liveDate;
     }
-    const simulated = new Date(base);
+    const simulated = new Date(liveDate);
     const targetHours = Math.floor(scrubbedMinutes / 60);
     const targetMinutes = scrubbedMinutes % 60;
     simulated.setHours(targetHours, targetMinutes, 0, 0);
     return simulated;
-  }, [mounted, liveDate, scrubbedMinutes]);
+  }, [liveDate, scrubbedMinutes]);
 
+  // 6. Swap Sides Handler
   const handleSwapSides = useCallback(() => {
     setPrimaryTz((prevPrimary) => {
       const nextPrimary = secondaryTz;
@@ -53,7 +59,7 @@ export default function DualDialPage() {
   }, [secondaryTz]);
 
   return (
-    <main className="relative min-h-screen w-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden font-sans">
+    <main className="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col bg-slate-950 text-slate-100 overflow-hidden font-sans select-none">
       {/* Top Floating Navigation Bar */}
       <HeaderControls
         is24Hour={is24Hour}
@@ -63,9 +69,9 @@ export default function DualDialPage() {
         onSwapSides={handleSwapSides}
       />
 
-      {/* 50/50 Split Screen Container (Stacked on Mobile, Side-by-Side on LG) */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-screen pt-14 sm:pt-16 pb-36 sm:pb-32 lg:pb-24">
-        {/* Left Side: Primary Timezone */}
+      {/* 100dvh Split Screen View (Desktop side-by-side / Mobile top-and-bottom stacked) */}
+      <div className="flex-1 min-h-0 w-full flex flex-col md:flex-row overflow-hidden pt-11 sm:pt-14">
+        {/* Primary Timezone (Default: IST) */}
         <DialPane
           timezone={primaryTz}
           onTimezoneChange={setPrimaryTz}
@@ -78,13 +84,13 @@ export default function DualDialPage() {
         />
 
         {/* Central Split Divider Glow Line */}
-        <div className="hidden lg:block w-[1px] bg-white/15 relative z-30 shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+        <div className="hidden md:block w-[1px] bg-white/15 relative z-30 shadow-[0_0_12px_rgba(255,255,255,0.2)]">
           <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full bg-slate-900/90 border border-white/20 flex items-center justify-center text-[10px] font-mono text-slate-400">
             VS
           </div>
         </div>
 
-        {/* Right Side: Compared / Secondary Timezone */}
+        {/* Target / Secondary Timezone (Default: EST/EDT) */}
         <DialPane
           timezone={secondaryTz}
           onTimezoneChange={setSecondaryTz}
@@ -97,8 +103,8 @@ export default function DualDialPage() {
         />
       </div>
 
-      {/* Bottom Floating 24-Hour Time Scrubber */}
-      <div className="fixed bottom-3 sm:bottom-4 left-0 right-0 z-40">
+      {/* Bottom Compact 24-Hour Time Travel Scrubber */}
+      <div className="shrink-0 z-30 pb-2 pt-1">
         <TimeScrubber
           isLive={scrubbedMinutes === null}
           scrubbedMinutes={scrubbedMinutes}
